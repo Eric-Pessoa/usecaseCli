@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { intro, outro, text, select, confirm, isCancel } from "@clack/prompts";
 import fs from "fs";
 
