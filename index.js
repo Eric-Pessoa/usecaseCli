@@ -2,11 +2,11 @@
 
 import { intro, outro, text, select, confirm, isCancel } from "@clack/prompts";
 import fs from "fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-let testFileContent;
-let dtoFileContent;
-let useCaseFileContent;
-let indexFileContent;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 let testFilePath;
 let dtoFilePath;
@@ -16,22 +16,29 @@ let indexFilePath;
 let modifiedDtoNamespace;
 let modifiedUsecaseClass;
 
+let templates;
+
 function getFileTemplatesBasedOnUsecaseType(usecaseType) {
   try {
-    testFileContent = fs.readFileSync(
-      `./templates/${usecaseType}/test.spec.ts`,
+    const basePath = path.join(__dirname, "templates", usecaseType);
+
+    const testFileContent = fs.readFileSync(
+      path.join(basePath, "test.spec.ts"),
       "utf-8"
     );
-    dtoFileContent = fs.readFileSync(
-      `./templates/${usecaseType}/dto.ts`,
+
+    const dtoFileContent = fs.readFileSync(
+      path.join(basePath, "dto.ts"),
       "utf-8"
     );
-    useCaseFileContent = fs.readFileSync(
-      `./templates/${usecaseType}/useCase.ts`,
+
+    const useCaseFileContent = fs.readFileSync(
+      path.join(basePath, "useCase.ts"),
       "utf-8"
     );
-    indexFileContent = fs.readFileSync(
-      `./templates/${usecaseType}/index.ts`,
+
+    const indexFileContent = fs.readFileSync(
+      path.join(basePath, "index.ts"),
       "utf-8"
     );
 
@@ -42,7 +49,8 @@ function getFileTemplatesBasedOnUsecaseType(usecaseType) {
       indexFileContent,
     };
   } catch (err) {
-    console.error(err);
+    console.error("Erro ao carregar templates:", err);
+    process.exit(1);
   }
 }
 
@@ -50,7 +58,7 @@ function createUsecaseFiles(usecaseName, usecaseType) {
   try {
     fs.mkdirSync(`./${usecaseName}`, { recursive: true });
 
-    const templates = getFileTemplatesBasedOnUsecaseType(usecaseType);
+    templates = getFileTemplatesBasedOnUsecaseType(usecaseType);
 
     testFilePath = `./${usecaseName}/${usecaseName}.spec.ts`;
     dtoFilePath = `./${usecaseName}/${usecaseName}DTO.ts`;
@@ -68,7 +76,10 @@ function createUsecaseFiles(usecaseName, usecaseType) {
 
 function replaceDtoKeywords() {
   try {
-    const modifiedContent = dtoFileContent.replace("DTO", modifiedDtoNamespace);
+    const modifiedContent = templates.dtoFileContent.replace(
+      "DTO",
+      modifiedDtoNamespace
+    );
 
     fs.writeFileSync(dtoFilePath, modifiedContent);
   } catch (err) {
@@ -78,7 +89,7 @@ function replaceDtoKeywords() {
 
 function replaceUsecaseKeywords() {
   try {
-    const modifiedContent = useCaseFileContent
+    const modifiedContent = templates.useCaseFileContent
       .replace(/DTO/g, modifiedDtoNamespace)
       .replace(/Usecase/g, modifiedUsecaseClass)
       .replace(/dto/g, modifiedDtoNamespace);
@@ -91,7 +102,7 @@ function replaceUsecaseKeywords() {
 
 function replaceTestKeywords() {
   try {
-    const modifiedContent = testFileContent
+    const modifiedContent = templates.testFileContent
       .replace(/DTO/g, modifiedDtoNamespace)
       .replace(/dto/g, modifiedDtoNamespace)
       .replace(/Usecase/g, modifiedUsecaseClass)
@@ -108,7 +119,7 @@ function replaceIndexKeywords() {
     `${str.charAt(0).toLowerCase()}${str.slice(1)}`;
 
   try {
-    const modifiedContent = indexFileContent
+    const modifiedContent = templates.indexFileContent
       .replace(/Usecase/g, modifiedUsecaseClass)
       .replace(/useCase/g, modifiedUsecaseClass)
       .replace(/usecaseInstance/g, lowercaseFirst(modifiedUsecaseClass));
