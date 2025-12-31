@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { intro, outro, text, select, confirm, isCancel } from "@clack/prompts";
+import { intro, outro, text, select } from "@clack/prompts";
 import fs from "fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
